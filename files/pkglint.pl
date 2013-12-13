@@ -1,5 +1,5 @@
 #! @PERL@
-# $NetBSD: pkglint.pl,v 1.854 2013/03/26 15:11:20 schmonz Exp $
+# $NetBSD: pkglint.pl,v 1.860 2013/10/12 18:09:59 rillig Exp $
 #
 
 # pkglint - static analyzer and checker for pkgsrc packages
@@ -367,9 +367,11 @@ my $is_internal;		# Is the current item from the infrastructure?
 #
 
 my $ipc_distinfo;		# Maps "$alg:$fname" => "checksum".
+my %ipc_used_licenses;		# { license name => true }
+my $ipc_checking_root_recursively; # For checking unused licenses
 
 # Context of the package that is currently checked.
-my $pkgpath;			# The relative path to the package within PKGSRC.
+my $pkgpath;			# The relative path to the package within PKGSRC
 my $pkgdir;			# PKGDIR from the package Makefile
 my $filesdir;			# FILESDIR from the package Makefile
 my $patchdir;			# PATCHDIR from the package Makefile
@@ -2111,9 +2113,8 @@ sub parse_mk_cond($$) {
 sub parse_licenses($) {
 	my ($licenses) = @_;
 
-	# XXX: this is clearly cheating
 	$licenses =~ s,\${PERL5_LICENSE},gnu-gpl-v2 OR artistic,g;
-	$licenses =~ s,[()]|AND|OR,,g;
+	$licenses =~ s,[()]|AND|OR,,g; # XXX: treats OR like AND
 	my @licenses = split(/\s+/, $licenses);
 	return \@licenses;
 }
@@ -2437,6 +2438,18 @@ sub checkword_absolute_pathname($$) {
 	}
 }
 
+sub check_unused_licenses() {
+
+	for my $licensefile (<${cwd_pkgsrcdir}/licenses/*>) {
+		if (-f $licensefile) {
+			my $licensename = basename($licensefile);
+			if (!exists($ipc_used_licenses{$licensename})) {
+				log_warning($licensefile, NO_LINES, "This license seems to be unused.");
+			}
+		}
+	}
+}
+
 sub checkpackage_possible_downgrade() {
 
 	$opt_debug_trace and log_debug(NO_FILE, NO_LINES, "checkpackage_possible_downgrade");
@@ -2527,6 +2540,13 @@ sub checkline_rcsid_regex($$$) {
 
 	if ($line->text !~ m"^${prefix_regex}\$(${id})(?::[^\$]+|)\$$") {
 		$line->log_error("\"${prefix}\$${opt_rcsidstring}\$\" expected.");
+		$line->explain_error(
+"Several files in pkgsrc must contain the CVS Id, so that their current",
+"version can be traced back later from a binary package. This is to",
+"ensure reproducible builds, for example for finding bugs.",
+"",
+"Please insert the text from the above error message (without the quotes)",
+"at this position in the file.");
 		return false;
 	}
 	return true;
@@ -3707,8 +3727,7 @@ sub checkline_mk_shellcmd($$) {
 
 sub expand_permission($) {
     my ($perm) = @_;
-    # wiz 20120826: IIUC, "u" is the permission for the variable to be used at all here; no need to expand it
-    my %fullperm = ( "a" => "append", "d" => "default", "p" => "preprocess", "s" => "set", "t" => "runtime", "?" => "unknown", "u" => "" );
+    my %fullperm = ( "a" => "append", "d" => "default", "p" => "preprocess", "s" => "set", "u" => "runtime", "?" => "unknown" );
     my $result = join(", ", map { $fullperm{$_} } split //, $perm);
     $result =~ s/, $//g;
 
@@ -4119,7 +4138,10 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 					my $license_file_line = $pkgctx_vardef->{"LICENSE_FILE"};
 
 					$license_file = "${current_dir}/" . resolve_relative_path($license_file_line->get("value"), false);
+				} else {
+					$ipc_used_licenses{$license} = true;
 				}
+
 				if (!-f $license_file) {
 					$line->log_warning("License file ".normalize_pathname($license_file)." does not exist.");
 				}
@@ -4254,7 +4276,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 				$line->log_warning("${varname} must be a positive integer number.");
 			}
 			if ($line->fname !~ m"(?:^|/)Makefile$") {
-				$line->log_error("${varname} must not be set outside the package Makefile.");
+				$line->log_error("${varname} only makes sense directly in the package Makefile.");
 				$line->explain_error(
 "Usually, different packages using the same Makefile.common have",
 "different dependencies and will be bumped at different times (e.g. for",
@@ -4400,7 +4422,10 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 		},
 
 		Tool => sub {
-			if ($value =~ m"^([-\w]+|\[)(?::(\w+))?$") {
+			if ($varname eq "TOOLS_NOOP" && $op eq "+=") {
+				# no warning for package-defined tool definitions
+
+			} elsif ($value =~ m"^([-\w]+|\[)(?::(\w+))?$") {
 				my ($toolname, $tooldep) = ($1, $2);
 				if (!exists(get_tool_names()->{$toolname})) {
 					$line->log_error("Unknown tool \"${toolname}\".");
@@ -4965,6 +4990,7 @@ sub checklines_package_Makefile_varorder($) {
 		[ "Dependencies", optional,
 			[
 				[ "BUILD_DEPENDS", many ],
+				[ "TOOL_DEPENDS", many ],
 				[ "DEPENDS", many ],
 			]
 		]
@@ -6143,7 +6169,7 @@ sub checkfile_package_Makefile($$) {
 	}
 
 	if (!exists($pkgctx_vardef->{"LICENSE"})) {
-		log_error($fname, NO_LINE_NUMBER, "All packages must define their LICENSE.");
+		log_error($fname, NO_LINE_NUMBER, "Each package must define its LICENSE.");
 	}
 
 	if (exists($pkgctx_vardef->{"GNU_CONFIGURE"}) && exists($pkgctx_vardef->{"USE_LANGUAGES"})) {
@@ -6231,6 +6257,9 @@ sub checkfile_package_Makefile($$) {
 
 			if (dewey_cmp($effective_pkgversion, "<", $suggver)) {
 				$effective_pkgname_line->log_warning("This package should be updated to ${suggver}${comment}.");
+				$effective_pkgname_line->explain_warning(
+"The wishlist for package updates in doc/TODO mentions that a newer",
+"version of this package is available.");
 			}
 			if (dewey_cmp($effective_pkgversion, "==", $suggver)) {
 				$effective_pkgname_line->log_note("The update request to ${suggver} from doc/TODO${comment} has been done.");
@@ -6282,6 +6311,16 @@ sub checkfile_patch($) {
 		CFA CH CHD CLD0 CLD CLA0 CLA
 		UFA UH UL
 	);
+
+	my @comment_explanation = (
+"Each patch must document why it is necessary. If it has been applied",
+"because of a security issue, a reference to the CVE should be mentioned",
+"as well.",
+"",
+"Since it is our goal to have as few patches as possible, all patches",
+"should be sent to the upstream maintainers of the package. After you",
+"have done so, you should add a reference to the bug report containing",
+"the patch.");
 
 	my ($line, $m);
 
@@ -6434,11 +6473,13 @@ sub checkfile_patch($) {
 		}], [PST_TEXT, re_patch_cfd, PST_CFA, sub() {
 			if (!$seen_comment) {
 				$line->log_error("Comment expected.");
+				$line->explain_error(@comment_explanation);
 			}
 			$line->log_warning("Please use unified diffs (diff -u) for patches.");
 		}], [PST_TEXT, re_patch_ufd, PST_UFA, sub() {
 			if (!$seen_comment) {
 				$line->log_error("Comment expected.");
+				$line->explain_error(@comment_explanation);
 			}
 		}], [PST_TEXT, re_patch_text, PST_TEXT, sub() {
 			$seen_comment = true;
@@ -6451,6 +6492,7 @@ sub checkfile_patch($) {
 				$opt_warn_space and $line->log_note("Empty line expected.");
 			} else {
 				$line->log_error("Comment expected.");
+				$line->explain_error(@comment_explanation);
 			}
 			$line->log_warning("Please use unified diffs (diff -u) for patches.");
 		}], [PST_CENTER, re_patch_ufd, PST_UFA, sub() {
@@ -6458,6 +6500,7 @@ sub checkfile_patch($) {
 				$opt_warn_space and $line->log_note("Empty line expected.");
 			} else {
 				$line->log_error("Comment expected.");
+				$line->explain_error(@comment_explanation);
 			}
 		}], [PST_CENTER, undef, PST_TEXT, sub() {
 			$opt_warn_space and $line->log_note("Empty line expected.");
@@ -6754,11 +6797,6 @@ sub checkfile_PLIST($) {
 "Directories are removed automatically when they are empty.",
 "When a package needs an empty directory, it can use the \@pkgdir",
 "command in the PLIST");
-
-				# XXX: this check should be made independent of dirrm
-				if ($pkgpath ne "graphics/hicolor-icon-theme" && $arg =~ m"^share/icons/hicolor(?:$|/)") {
-					$line->log_error("Please .include \"../../graphics/hicolor-icon-theme/buildlink3.mk\" and remove this line.");
-				}
 			} elsif ($cmd eq "imake-man") {
 				my (@args) = split(/\s+/, $arg);
 				if (@args != 3) {
@@ -6910,9 +6948,29 @@ sub checkfile_PLIST($) {
 			} elsif ($text =~ m"^share/applications/.*\.desktop$") {
 				my $f = "../../sysutils/desktop-file-utils/desktopdb.mk";
 				if (defined($pkgctx_included) && !exists($pkgctx_included->{$f})) {
-					$line->log_warning("Packages that install a .desktop entry should .include \"$f\".");
+					$line->log_warning("Packages that install a .desktop entry may .include \"$f\".");
+					$line->explain_warning(
+"If *.desktop files contain MimeType keys, global MIME Type registory DB",
+"must be updated by desktop-file-utils.",
+"Otherwise, this warning is harmless.");
 				}
 
+			} elsif ($pkgpath ne "graphics/hicolor-icon-theme" && $text =~ m"^share/icons/hicolor(?:$|/)") {
+				my $f = "../../graphics/hicolor-icon-theme/buildlink3.mk";
+				if (defined($pkgctx_included) && !exists($pkgctx_included->{$f})) {
+					$line->log_error("Please .include \"$f\" in the Makefile");
+					$line->explain_error(
+"If hicolor icon themes are installed, icon theme cache must be",
+"maintained. The hicolor-icon-theme package takes care of that.");
+				}
+
+			} elsif ($pkgpath ne "graphics/gnome-icon-theme" && $text =~ m"^share/icons/gnome(?:$|/)") {
+				my $f = "../../graphics/gnome-icon-theme/buildlink3.mk";
+				if (defined($pkgctx_included) && !exists($pkgctx_included->{$f})) {
+					$line->log_error("Please .include \"$f\"");
+					$line->explain_error(
+"If Gnome icon themes are installed, icon theme cache must be maintained.");
+				}
 			} elsif ($dirname eq "share/aclocal" && $basename =~ m"\.m4$") {
 				# Fine.
 
@@ -7034,10 +7092,10 @@ sub checkfile($) {
 	} elsif ($basename =~ m"^MESSAGE") {
 		$opt_check_MESSAGE and checkfile_MESSAGE($fname);
 
-	} elsif ($basename =~ m"^patch-[-A-Za-z0-9_\.~]*$") {
+	} elsif ($basename =~ m"^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$") {
 		$opt_check_patches and checkfile_patch($fname);
 
-	} elsif ($fname =~ m"(?:^|/)patches/manual-[^/]*$") {
+	} elsif ($fname =~ m"(?:^|/)patches/manual[^/]*$") {
 		$opt_debug_unchecked and log_debug($fname, NO_LINE_NUMBER, "Unchecked file \"${fname}\".");
 
 	} elsif ($fname =~ m"(?:^|/)patches/[^/]*$") {
@@ -7134,12 +7192,14 @@ sub checkdir_root() {
 				next;
 			}
 
-			if (defined($prev_subdir) && $subdir eq $prev_subdir) {
-				$line->log_error("${subdir} must only appear once.");
-			} elsif (defined($prev_subdir) && $subdir lt $prev_subdir) {
-				$line->log_warning("${subdir} should come before ${prev_subdir}.");
-			} else {
+			if (!defined($prev_subdir) || $subdir gt $prev_subdir) {
 				# correctly ordered
+			} elsif ($subdir eq $prev_subdir) {
+				$line->log_error("${subdir} must only appear once.");
+			} elsif ($prev_subdir eq "x11" && $subdir eq "archivers") {
+				# ignore that one, since it is documented in the top-level Makefile
+			} else {
+				$line->log_warning("${subdir} should come before ${prev_subdir}.");
 			}
 
 			$prev_subdir = $subdir;
@@ -7153,6 +7213,7 @@ sub checkdir_root() {
 	checklines_mk($lines);
 
 	if ($opt_recursive) {
+		$ipc_checking_root_recursively = true;
 		push(@todo_items, @subdirs);
 	}
 }
@@ -7511,6 +7572,10 @@ sub main() {
 	@todo_items = (@ARGV != 0) ? @ARGV : (".");
 	while (@todo_items != 0) {
 		checkitem(shift(@todo_items));
+	}
+
+	if ($ipc_checking_root_recursively) {
+		check_unused_licenses();
 	}
 
 	PkgLint::Logging::print_summary_and_exit($opt_quiet);
