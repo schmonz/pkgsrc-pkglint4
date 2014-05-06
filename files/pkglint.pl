@@ -1,5 +1,5 @@
 #! @PERL@
-# $NetBSD: pkglint.pl,v 1.860 2013/10/12 18:09:59 rillig Exp $
+# $NetBSD: pkglint.pl,v 1.866 2014/03/03 05:18:23 obache Exp $
 #
 
 # pkglint - static analyzer and checker for pkgsrc packages
@@ -291,7 +291,7 @@ our $program		= $0;
 # Commonly used regular expressions.
 #
 
-use constant regex_dependency_gt => qr"^((?:\$\{[\w_]+\}|[\w_\.]|-[^\d])+)>=(\d[^-]*)$";
+use constant regex_dependency_lge => qr"^((?:\$\{[\w_]+\}|[\w_\.]|-[^\d])+)[<>]=?(\d[^-*?\[\]]*)$";
 use constant regex_dependency_wildcard
 				=> qr"^((?:\$\{[\w_]+\}|[\w_\.]|-[^\d\[])+)-(?:\[0-9\]\*|\d[^-]*)$";
 use constant regex_gnu_configure_volatile_vars
@@ -3959,7 +3959,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 "foo-* matches foo-1.2, but also foo-client-1.2 and foo-server-1.2.");
 
 				} else {
-					$line->log_warning("Unknown dependency pattern \"${value}\".");
+					$line->log_error("Unknown dependency pattern \"${value}\".");
 				}
 
 			} elsif ($value =~ m"\{") {
@@ -3997,12 +3997,12 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 
 				}
 
-				if ($pattern =~ regex_dependency_gt) {
+				if ($pattern =~ regex_dependency_lge) {
 #				($abi_pkg, $abi_version) = ($1, $2);
 				} elsif ($pattern =~ regex_dependency_wildcard) {
 #				($abi_pkg) = ($1);
 				} else {
-					$line->log_warning("Unknown dependency pattern \"${pattern}\".");
+					$line->log_error("Unknown dependency pattern \"${pattern}\".");
 				}
 
 			} elsif ($value =~ m":\.\./[^/]+$") {
@@ -4029,7 +4029,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 			if ($value =~ m"^(\w+)-(\w+)$") {
 				my ($opsys, $arch) = ($1, $2);
 
-				if ($opsys !~ m"^(?:bsdos|cygwin|darwin|dragonfly|freebsd|haiku|hpux|interix|irix|linux|netbsd|openbsd|osf1|sunos)$") {
+				if ($opsys !~ m"^(?:bsdos|cygwin|darwin|dragonfly|freebsd|haiku|hpux|interix|irix|linux|netbsd|openbsd|osf1|sunos|solaris)$") {
 					$line->log_warning("Unknown operating system: ${opsys}");
 				}
 				# no check for $os_version
@@ -4291,7 +4291,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 			if ($value =~ m"^(${part})-(${part})-(${part})$") {
 				my ($opsys, $os_version, $arch) = ($1, $2, $3);
 
-				if ($opsys !~ m"^(?:\*|BSDOS|Cygwin|Darwin|DragonFly|FreeBSD|Haiku|HPUX|Interix|IRIX|Linux|NetBSD|OpenBSD|OSF1|SunOS)$") {
+				if ($opsys !~ m"^(?:\*|BSDOS|Cygwin|Darwin|DragonFly|FreeBSD|Haiku|HPUX|Interix|IRIX|Linux|NetBSD|OpenBSD|OSF1|QNX|SunOS)$") {
 					$line->log_warning("Unknown operating system: ${opsys}");
 				}
 				# no check for $os_version
@@ -4478,8 +4478,8 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 			} elsif ($value =~ m"^([0-9A-Za-z]+)://([^/]+)(.*)$") {
 				my ($scheme, $host, $abs_path) = ($1, $2, $3);
 
-				if ($scheme ne "ftp" && $scheme ne "http" && $scheme ne "gopher") {
-					$line->log_warning("\"${value}\" is not a valid URL. Only http, ftp and gopher URLs are allowed here.");
+				if ($scheme ne "ftp" && $scheme ne "http" && $scheme ne "https" && $scheme ne "gopher") {
+					$line->log_warning("\"${value}\" is not a valid URL. Only ftp, gopher, http, and https URLs are allowed here.");
 
 				} elsif ($abs_path eq "") {
 					$line->log_note("For consistency, please add a trailing slash to \"${value}\".");
@@ -4936,7 +4936,7 @@ sub checklines_package_Makefile_varorder($) {
 		],
 		[ "Unsorted stuff, part 1", once,
 			[
-				[ "DISTNAME", once ],
+				[ "DISTNAME", optional ],
 				[ "PKGNAME",  optional ],
 				[ "PKGREVISION", optional ],
 				[ "SVR4_PKGNAME", optional ],
@@ -5137,6 +5137,7 @@ sub checklines_mk($) {
 
 		} elsif ($varcanon eq "USE_TOOLS") {
 			foreach my $tool (split(qr"\s+", $line->get("value"))) {
+				$tool =~ s/:(build|run)//;
 				$mkctx_tools->{$tool} = true;
 				$opt_debug_misc and $line->log_debug("${tool} is added to USE_TOOLS.");
 			}
@@ -5620,7 +5621,7 @@ sub checklines_buildlink3_mk_pre2009($$) {
 
 			if ($varname eq "BUILDLINK_ABI_DEPENDS.${bl_pkgbase}") {
 				$abi_line = $line;
-				if ($value =~ regex_dependency_gt) {
+				if ($value =~ regex_dependency_lge) {
 					($abi_pkg, $abi_version) = ($1, $2);
 				} elsif ($value =~ regex_dependency_wildcard) {
 					($abi_pkg) = ($1);
@@ -5631,7 +5632,7 @@ sub checklines_buildlink3_mk_pre2009($$) {
 			}
 			if ($varname eq "BUILDLINK_API_DEPENDS.${bl_pkgbase}") {
 				$api_line = $line;
-				if ($value =~ regex_dependency_gt) {
+				if ($value =~ regex_dependency_lge) {
 					($api_pkg, $api_version) = ($1, $2);
 				} elsif ($value =~ regex_dependency_wildcard) {
 					($api_pkg) = ($1);
@@ -5780,7 +5781,7 @@ sub checklines_buildlink3_mk_2009($$$) {
 
 			if ($varname eq "BUILDLINK_ABI_DEPENDS.${bl_pkgbase}") {
 				$abi_line = $line;
-				if ($value =~ regex_dependency_gt) {
+				if ($value =~ regex_dependency_lge) {
 					($abi_pkg, $abi_version) = ($1, $2);
 				} elsif ($value =~ regex_dependency_wildcard) {
 					($abi_pkg) = ($1);
@@ -5791,7 +5792,7 @@ sub checklines_buildlink3_mk_2009($$$) {
 			}
 			if ($varname eq "BUILDLINK_API_DEPENDS.${bl_pkgbase}") {
 				$api_line = $line;
-				if ($value =~ regex_dependency_gt) {
+				if ($value =~ regex_dependency_lge) {
 					($api_pkg, $api_version) = ($1, $2);
 				} elsif ($value =~ regex_dependency_wildcard) {
 					($api_pkg) = ($1);
@@ -7061,6 +7062,8 @@ sub checkfile($) {
 	if (S_ISDIR($st->mode)) {
 		if ($basename eq "files" || $basename eq "patches" || $basename eq "CVS") {
 			# Ok
+		} elsif ($fname =~ m"(?:^|/)files/[^/]*$") {
+			# Ok
 
 		} elsif (!is_emptydir($fname)) {
 			log_warning($fname, NO_LINE_NUMBER, "Unknown directory name.");
@@ -7116,6 +7119,8 @@ sub checkfile($) {
 	} elsif (!-T $fname) {
 		log_warning($fname, NO_LINE_NUMBER, "Unexpectedly found a binary file.");
 
+	} elsif ($fname =~ m"(?:^|/)files/[^/]*$") {
+		# Ok
 	} else {
 		log_warning($fname, NO_LINE_NUMBER, "Unexpected file found.");
 		$opt_check_extra and checkfile_extra($fname);
