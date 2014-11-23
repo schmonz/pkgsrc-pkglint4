@@ -1,4 +1,4 @@
-# $NetBSD: makevars.map,v 1.249 2014/05/06 09:32:53 wiz Exp $
+# $NetBSD: makevars.map,v 1.258 2014/11/23 15:30:08 mef Exp $
 #
 
 # This file contains the guessed type of some variables, according to
@@ -10,9 +10,12 @@
 # The type Yes is used for variables that are checked using
 #     .if defined(VAR)
 #
-# Type type List is used for lists of things. There are two types of lists,
+# The type List is used for lists of things. There are two types of lists,
 # InternalList and List, which are described in the pkgsrc guide, chapter
 # "Makefiles".
+#
+# The other types are described in pkglint.pl, checkline_mk_vartype_basic.
+#
 
 #
 # Some commonly used ACLs. For further documentation, see the chapter
@@ -92,7 +95,6 @@ FETCH_USING			{ curl custom fetch ftp manual wget } [$user]
 FETCH_RESUME_ARGS		List of ShellWord [$user]
 FETCH_OUTPUT_ARGS		List of ShellWord [$user]
 LIBTOOLIZE_PLIST		YesNo [$user]
-PKG_INSTALLATION_PREFS		List of { overwrite pkgviews } [$user]
 PKG_RESUME_TRANSFERS		YesNo [$user]
 PKG_SYSCONFBASE			Pathname [$user]
 RCD_SCRIPTS_DIR			Pathname [$user]
@@ -306,7 +308,7 @@ EMACS_PKGNAME_PREFIX	Identifier [$system]
 # ^^ or the empty string.
 EMACS_TYPE		{ emacs xemacs } [$system]
 EMACS_USE_LEIM		Yes
-EMACS_VERSIONS_ACCEPTED	List of { emacs24 emacs24nox emacs23 emacs23nox emacs22 emacs22nox emacs21 emacs21nox emacs20 xemacs215 xemacs214 } [m:s]
+EMACS_VERSIONS_ACCEPTED	List of { emacs25 emacs24 emacs24nox emacs23 emacs23nox emacs22 emacs22nox emacs21 emacs21nox emacs20 xemacs215 xemacs215nox xemacs214 xemacs214nox} [m:s]
 EMACS_VERSION_MAJOR	Integer [$system]
 EMACS_VERSION_MINOR	Integer [$system]
 EMACS_VERSION_REQD	List of { emacs24 emacs24nox emacs23 emacs23nox emacs22 emacs22nox emacs21 emacs21nox emacs20 xemacs215 xemacs214 } [m:as]
@@ -427,6 +429,7 @@ LIBOSSAUDIO		Pathname [$system]
 LIBS*			List of LdFlag [$package_list]
 LIBTOOL			ShellCommand [$system]
 LIBTOOL_OVERRIDE	List of Pathmask [m:as]
+LIBTOOL_REQD		List of Version [$package_list]
 LICENCE			License [m:s,c:s,o:s]
 LICENSE			License [m:s,c:s,o:s]
 LICENSE_FILE		Pathname [$package]
@@ -487,7 +490,7 @@ MESSAGE_SRC		List of Pathname [$package_list]
 MESSAGE_SUBST		List of ShellWord [c:a,m:a,o:a]
 META_PACKAGE		Yes [$package]
 MISSING_FEATURES	List of Identifier [$system]
-MYSQL_VERSIONS_ACCEPTED	List of { 40 41 50 51 55 } [m:s]
+MYSQL_VERSIONS_ACCEPTED	List of { 51 55 56 } [m:s]
 MYSQL_VERSION_DEFAULT	Version [$user]
 NM			ShellCommand [$system]
 NONBINMODE		FileMode [$system]
@@ -519,9 +522,7 @@ OWNER			Mail_Address [m:s,c:d]
 OWN_DIRS		List of Pathname [$package_list]
 OWN_DIRS_PERMS		List of ShellWord [$package_list]
 PAMBASE			Pathname [$system]
-PAM_ACCEPTED		List of { linux-pam openpam solaris-pam }
 PAM_DEFAULT		{ linux-pam openpam solaris-pam } [$user]
-PAM_TYPE		{ linux-pam openpam solaris-pam } [$system]
 PATCHDIR		RelativePkgPath [m:s,c:ds]
 PATCHFILES		List of Filename [$package_list]
 PATCH_ARGS		List of ShellWord
@@ -558,9 +559,9 @@ PKGTOOLS_ENV		List of ShellWord
 PKGVERSION		Version [$system]
 PKGWILDCARD		Filemask [$system]
 PKG_ADMIN		ShellCommand [$system]
-PKG_APACHE		{ apache13 apache2 apache22 apache24 } [$system]
-PKG_APACHE_ACCEPTED	List of { apache13 apache2 apache22 apache24 } [$package]
-PKG_APACHE_DEFAULT	{ apache13 apache2 apache22 apache24 } [$user]
+PKG_APACHE		{ apache22 apache24 } [$system]
+PKG_APACHE_ACCEPTED	List of { apache22 apache24 } [$package]
+PKG_APACHE_DEFAULT	{ apache22 apache24 } [$user]
 PKG_CONFIG		Yes [$user]
 # ^^ No, this is not the popular command from GNOME, but the setting
 # whether the pkgsrc user wants configuration files automatically
@@ -579,7 +580,6 @@ PKG_GROUPS_VARS		List of Varname [$package_list]
 PKG_HOME.*		Pathname [m:s]
 PKG_HACKS		List of Identifier [h:a]
 PKG_INFO		ShellCommand [$system]
-PKG_INSTALLATION_TYPES	List of { overwrite pkgviews } [m:s,c:s]
 PKG_JAVA_HOME		Pathname [$system]
 PKG_JVM			{						\
 				blackdown-jdk13				\
@@ -657,6 +657,7 @@ PYTHON_VERSIONS_ACCEPTED List of Version [$package]
 PYTHON_VERSIONS_INCOMPATIBLE List of Version [$package]
 PYTHON_VERSION_DEFAULT	Version [$user]
 PYTHON_VERSION_REQD	Version [$user]
+PYTHON_VERSIONED_DEPENDENCIES	List of PythonDependency [$package_list]
 RANLIB			ShellCommand [$system]
 RCD_SCRIPTS		List of Filename [$package_list]
 RCD_SCRIPT_SRC.*	List of Pathname [m:s]
@@ -704,7 +705,6 @@ SUBST_SED.*		SedCommands [m:as,c:as,h:as,o:as,Makefile.*:as]
 SUBST_STAGE.*		Stage [$package]
 SUBST_VARS.*		List of Varname [$package_list]
 SUPERSEDES		InternalList of Dependency [$package_list]
-SVR4_PKGNAME		SVR4PkgName [$package]
 TEST_DIRS		List of WrksrcSubdirectory [$package_list]
 TEST_ENV		List of ShellWord [$package_list]
 TEST_TARGET		List of Identifier [m:s,c:ds,o:as]
