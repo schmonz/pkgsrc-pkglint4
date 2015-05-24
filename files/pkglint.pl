@@ -1,5 +1,5 @@
 #! @PERL@
-# $NetBSD: pkglint.pl,v 1.874 2014/12/06 22:21:30 schmonz Exp $
+# $NetBSD: pkglint.pl,v 1.877 2015/03/11 19:05:58 rillig Exp $
 #
 
 # pkglint - static analyzer and checker for pkgsrc packages
@@ -545,6 +545,8 @@ sub get_regex_plurals() {
 		.*_SUBST
 		.*_TARGET
 		.*_TMPL
+		BROKEN_EXCEPT_ON_PLATFORM
+		BROKEN_ON_PLATFORM
 		BUILDLINK_DEPMETHOD
 		BUILDLINK_TRANSFORM
 		EVAL_PREFIX
@@ -807,7 +809,7 @@ sub load_dist_sites() {
 		} elsif ($text eq "MASTER_SITE_BACKUP?=\t\\") {
 			$ignoring = true;
 
-		} elsif ($text =~ m"^\t((?:http://|ftp://)\S+/)(?:|\s*\\)$"o) {
+		} elsif ($text =~ m"^\t((?:http://|https://|ftp://)\S+/)(?:|\s*\\)$"o) {
 			if (!$ignoring) {
 				if (defined($varname)) {
 					$url2name->{$1} = $varname;
@@ -4049,7 +4051,18 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 			}
 		},
 
+		FetchURL => sub {
+			checkline_mk_vartype_basic($line, $varname, "URL", $op, $value, $comment, $list_context, $is_guessed);
 
+			my $sites = get_dist_sites();
+			foreach my $site (keys(%{$sites})) {
+				if (index($value, $site) == 0) {
+					my $subdir = substr($value, length($site));
+					$line->log_warning(sprintf("Please use \${%s:=%s} instead of \"%s\".", $sites->{$site}, $subdir, $value));
+					last;
+				}
+			}
+		},
 
 		Filename => sub {
 			if ($value_novar =~ m"/") {
@@ -4468,18 +4481,9 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 
 			} elsif ($value =~ m"^(https?|ftp|gopher)://([-0-9A-Za-z.]+)(?::(\d+))?/([-%&+,./0-9:=?\@A-Z_a-z~]|#)*$") {
 				my ($proto, $host, $port, $path) = ($1, $2, $3, $4);
-				my $sites = get_dist_sites();
 
 				if ($host =~ m"\.NetBSD\.org$"i && $host !~ m"\.NetBSD\.org$") {
 					$line->log_warning("Please write NetBSD.org instead of ${host}.");
-				}
-
-				foreach my $site (keys(%{$sites})) {
-					if (index($value, $site) == 0) {
-						my $subdir = substr($value, length($site));
-						$line->log_warning(sprintf("Please use \${%s:=%s} instead of \"%s\".", $sites->{$site}, $subdir, $value));
-						last;
-					}
 				}
 
 			} elsif ($value =~ m"^([0-9A-Za-z]+)://([^/]+)(.*)$") {
@@ -4985,6 +4989,8 @@ sub checklines_package_Makefile_varorder($) {
 		],
 		[ "Technical restrictions", optional,
 			[
+				[ "BROKEN_EXCEPT_ON_PLATFORM", many ],
+				[ "BROKEN_ON_PLATFORM", many ],
 				[ "NOT_FOR_PLATFORM", many ],
 				[ "ONLY_FOR_PLATFORM", many ],
 				[ "NOT_FOR_COMPILER", many ],

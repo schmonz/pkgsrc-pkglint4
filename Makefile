@@ -1,9 +1,6 @@
-# $NetBSD: Makefile,v 1.455 2014/12/06 22:21:30 schmonz Exp $
+# $NetBSD: Makefile,v 1.461 2015/05/03 15:20:23 bsiegert Exp $
 
-# Note: if you update the version number, please have a look at the
-# changes between the CVS tag "pkglint_current" and HEAD.
-# After updating, please re-set the CVS tag to HEAD.
-PKGNAME=	pkglint-4.149
+PKGNAME=	pkglint-4.154
 CATEGORIES=	pkgtools
 
 OWNER=		wiz@NetBSD.org
@@ -15,8 +12,8 @@ DEPENDS+=	p5-Digest-SHA1-[0-9]*:../../security/p5-Digest-SHA1
 DEPENDS+=	p5-enum>=1.016:../../devel/p5-enum
 DEPENDS+=	p5-pkgsrc-Dewey>=1.0:../../pkgtools/p5-pkgsrc-Dewey
 
-BUILD_DEPENDS+=	p5-Test-Deep-[0-9]*:../../devel/p5-Test-Deep
-BUILD_DEPENDS+=	p5-Test-Trap-[0-9]*:../../devel/p5-Test-Trap
+#BUILD_DEPENDS+=	p5-Test-Deep-[0-9]*:../../devel/p5-Test-Deep
+#BUILD_DEPENDS+=	p5-Test-Trap-[0-9]*:../../devel/p5-Test-Trap
 
 WRKSRC=		${WRKDIR}
 NO_CHECKSUM=	yes
