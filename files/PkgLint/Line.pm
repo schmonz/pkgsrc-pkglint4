@@ -1,4 +1,5 @@
-#==========================================================================
+# $NetBSD: Line.pm,v 1.5 2015/10/11 21:23:34 rillig Exp $
+#
 # When files are read in by pkglint, they are interpreted in terms of
 # lines. For Makefiles, line continuations are handled properly, allowing
 # multiple physical lines to end in a single logical line. For other files
@@ -18,8 +19,11 @@
 #
 # A line can have some "extra" fields that allow the results of parsing to
 # be saved under a name.
-#==========================================================================
+#
 package PkgLint::Line;
+
+use strict;
+use warnings;
 
 BEGIN {
 	import PkgLint::Util qw(
@@ -50,12 +54,14 @@ sub has($$) {
 }
 sub get($$) {
 	my ($self, $name) = @_;
-	assert(exists($self->[EXTRA]->{$name}), "Field ${name} does not exist.");
+	assert(false, "Field ${name} does not exist.")
+		unless exists($self->[EXTRA]->{$name});
 	return $self->[EXTRA]->{$name};
 }
 sub set($$$) {
 	my ($self, $name, $value) = @_;
-	assert(!exists($self->[EXTRA]->{$name}), "Field ${name} already exists.");
+	assert(false, "Field ${name} already exists.")
+		if exists($self->[EXTRA]->{$name});
 
 	# Make sure that the line does not become a cyclic data structure.
 	my $type = ref($value);
@@ -64,8 +70,8 @@ sub set($$$) {
 	} elsif ($type eq "ARRAY") {
 		foreach my $element (@{$value}) {
 			my $element_type = ref($element);
-			assert($element_type eq "" || $element_type eq "PkgLint::SimpleMatch",
-				"Invalid array data type: name=${name}, type=${element_type}.");
+			assert(false, "Invalid array data type: name=${name}, type=${element_type}.")
+				unless $element_type eq "" || $element_type eq "PkgLint::SimpleMatch";
 		}
 	} else {
 		assert(false, "Invalid data: name=${name}, value=${value}.");
@@ -209,7 +215,3 @@ sub set_text($$) {
 	$self->[PHYSLINES] = [[0, "$text\n"]];
 	$self->[CHANGED] = true;
 }
-
-#== End of PkgLint::Line ==================================================
-
-1;
