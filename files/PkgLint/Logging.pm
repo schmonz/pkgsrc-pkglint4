@@ -1,4 +1,4 @@
-# $NetBSD: Logging.pm,v 1.2 2015/10/11 21:06:20 rillig Exp $
+# $NetBSD: Logging.pm,v 1.1 2015/11/25 16:42:21 rillig Exp $
 #
 # Subroutines for printing messages to the user in a common format.
 # The subroutines all have the parameters C<$fname>,

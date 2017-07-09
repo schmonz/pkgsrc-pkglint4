@@ -1,5 +1,5 @@
 #! @PERL@
-# $NetBSD: plist-clash.pl,v 1.5 2005/11/10 14:30:56 rillig Exp $
+# $NetBSD: plist-clash.pl,v 1.1 2015/11/25 16:42:21 rillig Exp $
 #
 # Scan all PLIST files given on the command line and report all lines
 # that appear more than once.

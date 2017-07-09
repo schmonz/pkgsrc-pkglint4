@@ -1,4 +1,4 @@
-<!-- $NetBSD: chap.statemachines.xml,v 1.4 2009/04/26 11:00:17 rillig Exp $ -->
+<!-- $NetBSD: chap.statemachines.xml,v 1.1 2015/11/25 16:42:21 rillig Exp $ -->
 
 <chapter id="statemachines">
 <title>State machines</title>

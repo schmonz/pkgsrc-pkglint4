@@ -1,4 +1,4 @@
-# $NetBSD: SimpleMatch.pm,v 1.3 2015/10/11 21:23:34 rillig Exp $
+# $NetBSD: SimpleMatch.pm,v 1.1 2015/11/25 16:42:21 rillig Exp $
 #
 # A SimpleMatch is the result of applying a regular expression to a Perl
 # scalar value. It can return the range and the text of the captured

@@ -1,4 +1,4 @@
-# $NetBSD: makevars.map,v 1.267 2015/07/04 16:18:39 joerg Exp $
+# $NetBSD: makevars.map,v 1.5 2017/06/14 16:23:09 prlw1 Exp $
 #
 
 # This file contains the guessed type of some variables, according to
@@ -384,6 +384,7 @@ GNU_CONFIGURE_PREFIX	Pathname [m:s]
 HAS_CONFIGURE		Yes [m:s,c:s]
 HEADER_TEMPLATES	List of Pathname [$package_list]
 HOMEPAGE		URL [$package]
+ICON_THEMES		Yes
 IGNORE_PKG.*		Yes [*:sp]
 INCOMPAT_CURSES		InternalList of PlatformTriple [m:as]
 INCOMPAT_ICONV		InternalList of PlatformTriple
@@ -543,7 +544,7 @@ PERL5_USE_PACKLIST	YesNo [$package]
 PERL5_PACKLIST		List of Perl5Packlist [m:s,o:sa]
 PERL5_PACKLIST_DIR	Pathname []
 PGSQL_PREFIX		Pathname [$system]
-PGSQL_VERSIONS_ACCEPTED	List of { 82 83 84 90 91 }
+PGSQL_VERSIONS_ACCEPTED	List of {92 93 94 95 96}
 PGSQL_VERSION_DEFAULT	Version [$user]
 PG_LIB_EXT		{ dylib so } [$system]
 PGSQL_TYPE		{ postgresql81-client postgresql80-client } [$system]
@@ -658,7 +659,7 @@ PTHREAD_OPTS		List of { native optional require } [m:as,c:a,b:a]
 PTHREAD_TYPE		Identifier [$system]
 # ^^ or "native" or "none".
 PY_PATCHPLIST		Yes [$package]
-PYPKGPREFIX		{ py27 py33 py34 } [*:pu, pyversion.mk:s, *:]
+PYPKGPREFIX		{ py27 py34 py35 } [*:pu, pyversion.mk:s, *:]
 PYTHON_FOR_BUILD_ONLY	Yes [$package]
 REPLACE_PYTHON	List of Pathmask [$package_list]
 PYTHON_VERSIONS_ACCEPTED List of Version [$package]
@@ -738,7 +739,6 @@ UPDATE_TARGET		List of Identifier [$user]
 USE_BSD_MAKEFILE	Yes [$package]
 USE_BUILTIN.*		YesNo_Indirectly [builtin.mk:s]
 USE_CMAKE		Yes [$package]
-USE_CROSSBASE		Yes [m:s]
 USE_FEATURES		List of Identifier [$package]
 USE_GCC_RUNTIME		YesNo [$package]
 USE_GNU_CONFIGURE_HOST	YesNo [$package]

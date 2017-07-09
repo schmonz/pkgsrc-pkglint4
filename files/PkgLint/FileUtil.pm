@@ -1,4 +1,4 @@
-# $NetBSD: FileUtil.pm,v 1.3 2015/10/11 21:06:20 rillig Exp $
+# $NetBSD: FileUtil.pm,v 1.1 2015/11/25 16:42:21 rillig Exp $
 #
 # Subroutines for loading and saving line-oriented files.
 # The load_file() subroutine loads a file completely into memory,

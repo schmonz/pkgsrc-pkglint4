@@ -1,4 +1,4 @@
-<!-- $NetBSD: chap.design.xml,v 1.2 2006/02/28 23:25:23 rillig Exp $ -->
+<!-- $NetBSD: chap.design.xml,v 1.1 2015/11/25 16:42:21 rillig Exp $ -->
 
 <chapter id="design">
 <title>Design goals</title>

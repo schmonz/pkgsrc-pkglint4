@@ -1,4 +1,4 @@
-@comment $NetBSD: PLIST,v 1.5 2009/06/14 18:11:03 joerg Exp $
+@comment $NetBSD: PLIST,v 1.1 2015/11/25 16:42:21 rillig Exp $
 bin/pkglint
 bin/plist-clash
 man/cat1/pkglint.0

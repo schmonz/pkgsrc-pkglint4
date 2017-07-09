@@ -1,4 +1,4 @@
-# $NetBSD: deprecated.map,v 1.66 2014/10/09 14:10:41 wiz Exp $
+# $NetBSD: deprecated.map,v 1.1 2015/11/25 16:42:21 rillig Exp $
 #
 
 # This file contains names of Makefile variables and a short explanation

@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.3 2006/05/23 08:10:37 rillig Exp $
+# $NetBSD: Makefile,v 1.1 2015/11/25 16:42:21 rillig Exp $
 #
 
 XMLDOCS+=	pkglint.xml

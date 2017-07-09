@@ -1,4 +1,4 @@
-<!-- $NetBSD: chap.code.xml,v 1.5 2006/07/21 05:11:34 rillig Exp $ -->
+<!-- $NetBSD: chap.code.xml,v 1.1 2015/11/25 16:42:21 rillig Exp $ -->
 
 <chapter id="code">
 <title>Code structure</title>

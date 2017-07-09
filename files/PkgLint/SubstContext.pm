@@ -1,4 +1,4 @@
-# $NetBSD: SubstContext.pm,v 1.3 2015/10/11 21:23:34 rillig Exp $
+# $NetBSD: SubstContext.pm,v 1.1 2015/11/25 16:42:21 rillig Exp $
 #
 # This class records the state of a block of variable assignments that make
 # up a SUBST class. As these variable assignments are not easy to get right

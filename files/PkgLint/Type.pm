@@ -1,4 +1,4 @@
-# $NetBSD: Type.pm,v 1.3 2015/10/11 21:23:34 rillig Exp $
+# $NetBSD: Type.pm,v 1.1 2015/11/25 16:42:21 rillig Exp $
 #
 # A Type in pkglint is a combination of a data type and a permission
 # specification. Further details can be found in the chapter ``The pkglint

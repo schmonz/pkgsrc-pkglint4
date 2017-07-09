@@ -1,5 +1,5 @@
 #! @PERL@
-# $NetBSD: build.pl,v 1.2 2015/10/11 19:20:17 rillig Exp $
+# $NetBSD: build.pl,v 1.1 2015/11/25 16:42:21 rillig Exp $
 #
 
 use strict;

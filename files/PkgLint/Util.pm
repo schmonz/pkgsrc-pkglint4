@@ -1,4 +1,4 @@
-# $NetBSD: Util.pm,v 1.3 2015/10/11 21:23:34 rillig Exp $
+# $NetBSD: Util.pm,v 1.1 2015/11/25 16:42:21 rillig Exp $
 #
 # This package is a catch-all for subroutines that are not application-spe-
 # cific. Currently it contains the boolean constants C<false> and C<true>,

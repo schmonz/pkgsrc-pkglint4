@@ -1,5 +1,5 @@
 #! @PERL@
-# $NetBSD: pkglint.t,v 1.13 2014/12/06 22:21:30 schmonz Exp $
+# $NetBSD: pkglint.t,v 1.1 2015/11/25 16:42:21 rillig Exp $
 #
 
 require 'pkglint.pl';			# so we can test its internals
@@ -76,7 +76,7 @@ sub test_get_vartypes_basictypes {
 		CFlag Category Comment
 		Dependency DependencyWithPath
 		DistSuffix EmulPlatform
-		FileMode Filemask Filename
+		FetchURL FileMode Filemask Filename
 		Identifier Integer LdFlag License Mail_Address Message Option
 		Pathlist Pathmask Pathname
 		Perl5Packlist
