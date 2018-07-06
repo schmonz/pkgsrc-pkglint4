@@ -1,4 +1,4 @@
-# $NetBSD: makevars.map,v 1.5 2017/06/14 16:23:09 prlw1 Exp $
+# $NetBSD: makevars.map,v 1.9 2018/05/21 08:12:23 adam Exp $
 #
 
 # This file contains the guessed type of some variables, according to
@@ -311,10 +311,10 @@ EMACS_PKGNAME_PREFIX	Identifier [$system]
 # ^^ or the empty string.
 EMACS_TYPE		{ emacs xemacs } [$system]
 EMACS_USE_LEIM		Yes
-EMACS_VERSIONS_ACCEPTED	List of { emacs25 emacs24 emacs24nox emacs23 emacs23nox emacs22 emacs22nox emacs21 emacs21nox emacs20 xemacs215 xemacs215nox xemacs214 xemacs214nox} [m:s]
+EMACS_VERSIONS_ACCEPTED	List of { emacs25 emacs21 emacs21nox emacs20 xemacs215 xemacs215nox xemacs214 xemacs214nox} [m:s]
 EMACS_VERSION_MAJOR	Integer [$system]
 EMACS_VERSION_MINOR	Integer [$system]
-EMACS_VERSION_REQD	List of { emacs24 emacs24nox emacs23 emacs23nox emacs22 emacs22nox emacs21 emacs21nox emacs20 xemacs215 xemacs214 } [m:as]
+EMACS_VERSION_REQD	List of { emacs25 emacs21 emacs21nox emacs20 xemacs215 xemacs214 } [m:as]
 EMULDIR			Pathname [$system]
 EMULSUBDIR		Pathname [$system]
 OPSYS_EMULDIR		Pathname [$system]
@@ -544,7 +544,7 @@ PERL5_USE_PACKLIST	YesNo [$package]
 PERL5_PACKLIST		List of Perl5Packlist [m:s,o:sa]
 PERL5_PACKLIST_DIR	Pathname []
 PGSQL_PREFIX		Pathname [$system]
-PGSQL_VERSIONS_ACCEPTED	List of {92 93 94 95 96}
+PGSQL_VERSIONS_ACCEPTED	List of {10 93 94 95 96}
 PGSQL_VERSION_DEFAULT	Version [$user]
 PG_LIB_EXT		{ dylib so } [$system]
 PGSQL_TYPE		{ postgresql81-client postgresql80-client } [$system]
@@ -568,9 +568,9 @@ PKGTOOLS_ENV		List of ShellWord
 PKGVERSION		Version [$system]
 PKGWILDCARD		Filemask [$system]
 PKG_ADMIN		ShellCommand [$system]
-PKG_APACHE		{ apache22 apache24 } [$system]
-PKG_APACHE_ACCEPTED	List of { apache22 apache24 } [$package]
-PKG_APACHE_DEFAULT	{ apache22 apache24 } [$user]
+PKG_APACHE		{ apache24 } [$system]
+PKG_APACHE_ACCEPTED	List of { apache24 } [$package]
+PKG_APACHE_DEFAULT	{ apache24 } [$user]
 PKG_CONFIG		Yes [$user]
 # ^^ No, this is not the popular command from GNOME, but the setting
 # whether the pkgsrc user wants configuration files automatically
@@ -717,8 +717,6 @@ SUPERSEDES		InternalList of Dependency [$package_list]
 TEST_DIRS		List of WrksrcSubdirectory [$package_list]
 TEST_ENV		List of ShellWord [$package_list]
 TEST_TARGET		List of Identifier [m:s,c:ds,o:as]
-TEX_ACCEPTED		List of { teTeX1 teTeX2 teTeX3 } [m:s,c:s]
-TEX_DEPMETHOD		{ build run } [m:s,c:s]
 TEXINFO_REQD		List of Version [$package_list]
 TOOL_DEPENDS		InternalList of DependencyWithPath [c:a,m:a,o:a,*.mk:a]
 TOOLS_ALIASES		List of Filename [$system]
