@@ -1,4 +1,4 @@
-# $NetBSD: Shell.pm,v 1.1 2015/11/25 16:42:21 rillig Exp $
+# $NetBSD: Shell.pm,v 1.4 2019/11/18 08:06:59 rillig Exp $
 #
 # Parsing and checking shell commands embedded in Makefiles
 #
@@ -524,8 +524,8 @@ sub checkline_mk_shelltext($$) {
 				}
 
 			} else {
-				$opt_warn_extra and $line->log_warning("Unknown shell command \"${shellword}\".");
-				$opt_warn_extra and $line->explain_warning(
+				0 and $opt_warn_extra and $line->log_warning("Unknown shell command \"${shellword}\".");
+				0 and $opt_warn_extra and $line->explain_warning(
 "If you want your package to be portable to all platforms that pkgsrc",
 "supports, you should only use shell commands that are covered by the",
 "tools framework.");
@@ -539,10 +539,6 @@ sub checkline_mk_shelltext($$) {
 "When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
 "shell will exit, no matter if it is protected by an \"if\" or the",
 "\"||\" operator.");
-		}
-
-		if (($state != SCST_PAX_S && $state != SCST_SED_E && $state != SCST_CASE_LABEL)) {
-			checkline_mk_absolute_pathname($line, $shellword);
 		}
 
 		if (($state == SCST_INSTALL_D || $state == SCST_MKDIR) && $shellword =~ m"^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/") {
@@ -599,13 +595,6 @@ sub checkline_mk_shelltext($$) {
 
 		if ($state == SCST_ECHO && $shellword eq "-n") {
 			$line->log_warning("Please use \${ECHO_N} instead of \"echo -n\".");
-		}
-
-		if ($opt_warn_extra && $state != SCST_CASE_LABEL_CONT && $shellword eq "|") {
-			$line->log_warning("The exitcode of the left-hand-side command of the pipe operator is ignored.");
-			$line->explain_warning(
-"If you need to detect the failure of the left-hand-side command, use",
-"temporary files to save the output of the command.");
 		}
 
 		if ($opt_warn_extra && $shellword eq ";" && $state != SCST_COND_CONT && $state != SCST_FOR_CONT && !$set_e_mode) {
